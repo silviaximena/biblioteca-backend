@@ -39,6 +39,6 @@ public class Prestamo {
     private LocalDate fechaDevolucion;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "ESTADO", nullable = false, length = 20)
+    @Column(name = "ESTADO", nullable = false, length = 25)
     private EstadoPrestamo estado;
 }
