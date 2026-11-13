@@ -40,7 +40,7 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(Customizer.withDefaults())
                 .sessionManagement(sesion -> sesion.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
+                        .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**", "/error").permitAll()
                         .requestMatchers("/api/v1/auth/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/v1/libros/**", "/api/v1/categorias/**").permitAll()
@@ -50,6 +50,10 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/v1/prestamos/mios").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/v1/prestamos", "/api/v1/prestamos/*").hasAnyRole("BIBLIOTECARIO", "ADMINISTRADOR")
                         .requestMatchers(HttpMethod.PUT, "/api/v1/prestamos/*/confirmar-devolucion").hasAnyRole("BIBLIOTECARIO", "ADMINISTRADOR")
+                        .requestMatchers("/api/v1/usuarios/yo").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/usuarios").hasAnyRole("BIBLIOTECARIO", "ADMINISTRADOR")
+                        .requestMatchers(HttpMethod.GET, "/api/v1/reservas/mias").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/reservas").hasAnyRole("BIBLIOTECARIO", "ADMINISTRADOR")
                         .anyRequest().authenticated())
                 .exceptionHandling(errores -> errores
                         .authenticationEntryPoint((request, response, ex) ->
