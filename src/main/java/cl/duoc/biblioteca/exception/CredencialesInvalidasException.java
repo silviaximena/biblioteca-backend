@@ -1,0 +1,8 @@
+package cl.duoc.biblioteca.exception;
+
+public class CredencialesInvalidasException extends RuntimeException {
+
+    public CredencialesInvalidasException(String mensaje) {
+        super(mensaje);
+    }
+}
