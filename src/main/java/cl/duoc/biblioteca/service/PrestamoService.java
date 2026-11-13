@@ -9,6 +9,7 @@ import cl.duoc.biblioteca.model.EstadoEjemplar;
 import cl.duoc.biblioteca.model.EstadoPrestamo;
 import cl.duoc.biblioteca.model.Libro;
 import cl.duoc.biblioteca.model.Prestamo;
+import cl.duoc.biblioteca.model.TipoUsuario;
 import cl.duoc.biblioteca.model.Usuario;
 import cl.duoc.biblioteca.repository.EjemplarRepository;
 import cl.duoc.biblioteca.repository.LibroRepository;
@@ -20,6 +21,7 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -27,8 +29,9 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PrestamoService {
 
-    private static final int DIAS_PRESTAMO = 15;
-    private static final int MAXIMO_ACTIVOS = 3;
+    private static final int LIMITE_PRESTAMOS = 5;
+    private static final int DIAS_ESTUDIANTE = 15;
+    private static final int DIAS_PROFESOR = 30;
     private static final List<EstadoPrestamo> ESTADOS_ACTIVOS =
             List.of(EstadoPrestamo.ACTIVO, EstadoPrestamo.DEVOLUCION_SOLICITADA, EstadoPrestamo.ATRASADO);
 
@@ -37,6 +40,18 @@ public class PrestamoService {
     private final LibroRepository libroRepository;
     private final UsuarioRepository usuarioRepository;
 
+    public static LocalDate calcularVencimiento(TipoUsuario tipoUsuario, LocalDate desde) {
+        int dias = tipoUsuario == TipoUsuario.PROFESOR ? DIAS_PROFESOR : DIAS_ESTUDIANTE;
+        LocalDate vencimiento = desde.plusDays(dias);
+        if (vencimiento.getDayOfWeek() == DayOfWeek.SATURDAY) {
+            return vencimiento.plusDays(2);
+        }
+        if (vencimiento.getDayOfWeek() == DayOfWeek.SUNDAY) {
+            return vencimiento.plusDays(1);
+        }
+        return vencimiento;
+    }
+
     @Transactional
     public PrestamoResponse pedir(String correo, PrestamoRequest datos) {
         Usuario usuario = usuarioRepository.findByCorreo(correo)
@@ -44,8 +59,8 @@ public class PrestamoService {
         Libro libro = libroRepository.findById(datos.libroId())
                 .orElseThrow(() -> new RecursoNoEncontradoException("No existe un libro con id " + datos.libroId()));
 
-        if (prestamoRepository.countByUsuarioIdAndEstadoIn(usuario.getId(), ESTADOS_ACTIVOS) >= MAXIMO_ACTIVOS) {
-            throw new ReglaNegocioException("Ya tienes " + MAXIMO_ACTIVOS + " préstamos activos. Devuelve uno para pedir otro");
+        if (prestamoRepository.countByUsuarioIdAndEstadoIn(usuario.getId(), ESTADOS_ACTIVOS) >= LIMITE_PRESTAMOS) {
+            throw new ReglaNegocioException("Límite de " + LIMITE_PRESTAMOS + " libros alcanzado. Devuelve uno para pedir otro");
         }
         if (prestamoRepository.existsByUsuarioIdAndEjemplarLibroIdAndEstadoIn(usuario.getId(), libro.getId(), ESTADOS_ACTIVOS)) {
             throw new ReglaNegocioException("Ya tienes un préstamo activo de " + libro.getTitulo());
@@ -59,7 +74,7 @@ public class PrestamoService {
         prestamo.setUsuario(usuario);
         prestamo.setEjemplar(ejemplar);
         prestamo.setFechaPrestamo(LocalDate.now());
-        prestamo.setFechaVencimiento(LocalDate.now().plusDays(DIAS_PRESTAMO));
+        prestamo.setFechaVencimiento(calcularVencimiento(usuario.getTipoUsuario(), LocalDate.now()));
         prestamo.setEstado(EstadoPrestamo.ACTIVO);
         return aRespuesta(prestamoRepository.save(prestamo));
     }
@@ -114,8 +129,9 @@ public class PrestamoService {
     }
 
     private PrestamoResponse aRespuesta(Prestamo prestamo) {
-        boolean atrasado = prestamo.getEstado() != EstadoPrestamo.DEVUELTO
-                && prestamo.getFechaVencimiento().isBefore(LocalDate.now());
+        boolean atrasado = prestamo.getEstado() == EstadoPrestamo.ATRASADO
+                || (prestamo.getEstado() != EstadoPrestamo.DEVUELTO
+                && prestamo.getFechaVencimiento().isBefore(LocalDate.now()));
         return new PrestamoResponse(
                 prestamo.getId(),
                 prestamo.getUsuario().getId(),

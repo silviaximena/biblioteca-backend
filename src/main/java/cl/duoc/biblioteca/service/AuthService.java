@@ -5,6 +5,7 @@ import cl.duoc.biblioteca.dto.LoginRequest;
 import cl.duoc.biblioteca.dto.RegistroRequest;
 import cl.duoc.biblioteca.exception.CredencialesInvalidasException;
 import cl.duoc.biblioteca.exception.ReglaNegocioException;
+import cl.duoc.biblioteca.model.Rol;
 import cl.duoc.biblioteca.model.TipoUsuario;
 import cl.duoc.biblioteca.model.Usuario;
 import cl.duoc.biblioteca.repository.UsuarioRepository;
@@ -41,7 +42,8 @@ public class AuthService {
         usuario.setCorreo(correo);
         usuario.setClave(passwordEncoder.encode(datos.clave()));
         usuario.setFechaNacimiento(datos.fechaNacimiento());
-        usuario.setTipoUsuario(TipoUsuario.ESTUDIANTE);
+        usuario.setRol(Rol.ESTUDIANTE);
+        usuario.setTipoUsuario(correo.endsWith("@profesor.duoc.cl") ? TipoUsuario.PROFESOR : TipoUsuario.ESTUDIANTE);
         return aRespuesta(usuarioRepository.save(usuario));
     }
 
@@ -52,7 +54,7 @@ public class AuthService {
                 usuario.getNombreCompleto(),
                 usuario.getCorreo(),
                 usuario.getFechaNacimiento(),
-                usuario.getTipoUsuario().name()
+                usuario.getRol().name()
         );
     }
 }

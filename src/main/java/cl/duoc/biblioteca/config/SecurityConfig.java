@@ -73,9 +73,9 @@ public class SecurityConfig {
     public UserDetailsService userDetailsService() {
         return correo -> usuarioRepository.findByCorreo(correo)
                 .map(usuario -> User.withUsername(usuario.getCorreo())
-                        .password(usuario.getClave())
-                        .roles(usuario.getTipoUsuario().name())
-                        .build())
+                .password(usuario.getClave())
+                .roles(usuario.getRol().name())
+                .build())
                 .orElseThrow(() -> new UsernameNotFoundException("No existe el usuario " + correo));
     }
 

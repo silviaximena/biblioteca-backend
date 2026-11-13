@@ -1,6 +1,6 @@
-
 package cl.duoc.biblioteca.config;
 
+import cl.duoc.biblioteca.model.Rol;
 import cl.duoc.biblioteca.model.TipoUsuario;
 import cl.duoc.biblioteca.model.Usuario;
 import cl.duoc.biblioteca.repository.UsuarioRepository;
@@ -18,17 +18,18 @@ public class DatosIniciales implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        crearSiNoExiste("Mauricio Administrador", "mauricio@profesor.duoc.cl", TipoUsuario.ADMINISTRADOR);
-        crearSiNoExiste("Biblioteca Duoc", "biblioteca@duoc.cl", TipoUsuario.BIBLIOTECARIO);
-        crearSiNoExiste("Estudiante Demo", "estudiante@duoc.cl", TipoUsuario.ESTUDIANTE);
+        crearSiNoExiste("Mauricio Administrador", "mauricio@profesor.duoc.cl", Rol.ADMINISTRADOR, TipoUsuario.PROFESOR);
+        crearSiNoExiste("Biblioteca Duoc", "biblioteca@duoc.cl", Rol.BIBLIOTECARIO, TipoUsuario.ESTUDIANTE);
+        crearSiNoExiste("Estudiante Demo", "estudiante@duoc.cl", Rol.ESTUDIANTE, TipoUsuario.ESTUDIANTE);
     }
 
-    private void crearSiNoExiste(String nombre, String correo, TipoUsuario tipo) {
+    private void crearSiNoExiste(String nombre, String correo, Rol rol, TipoUsuario tipo) {
         if (!usuarioRepository.existsByCorreo(correo)) {
             Usuario usuario = new Usuario();
             usuario.setNombreCompleto(nombre);
             usuario.setCorreo(correo);
             usuario.setClave(passwordEncoder.encode("1234"));
+            usuario.setRol(rol);
             usuario.setTipoUsuario(tipo);
             usuarioRepository.save(usuario);
         }

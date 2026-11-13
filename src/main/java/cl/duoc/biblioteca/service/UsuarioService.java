@@ -3,6 +3,7 @@ package cl.duoc.biblioteca.service;
 import cl.duoc.biblioteca.dto.PerfilRequest;
 import cl.duoc.biblioteca.dto.UsuarioResponse;
 import cl.duoc.biblioteca.exception.RecursoNoEncontradoException;
+import cl.duoc.biblioteca.model.TipoUsuario;
 import cl.duoc.biblioteca.model.Usuario;
 import cl.duoc.biblioteca.repository.UsuarioRepository;
 import lombok.RequiredArgsConstructor;
@@ -44,13 +45,13 @@ public class UsuarioService {
     }
 
     private UsuarioResponse aRespuesta(Usuario usuario) {
-        String categoria = usuario.getCorreo().endsWith("@profesor.duoc.cl") ? "Docente" : "Estudiante";
+        String categoria = usuario.getTipoUsuario() == TipoUsuario.PROFESOR ? "Docente" : "Estudiante";
         return new UsuarioResponse(
                 usuario.getId(),
                 usuario.getNombreCompleto(),
                 usuario.getCorreo(),
                 usuario.getFechaNacimiento(),
-                usuario.getTipoUsuario().name(),
+                usuario.getRol().name(),
                 categoria
         );
     }
